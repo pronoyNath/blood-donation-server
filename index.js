@@ -95,9 +95,21 @@ async function run() {
 
     // all-users info 
     app.get('/all-users',verifyToken,async(req,res)=>{
-      const cursor = usersInfoCollection.find();
-      const result = await cursor.toArray();
+      const page = parseInt(req.query.page);
+      const size = parseInt(req.query.size);
+
+      // console.log('pagination query', page, size);
+      const result = await usersInfoCollection.find()
+      .skip(page * size)
+      .limit(size)
+      .toArray();
       res.send(result);
+    })
+
+    //total user count
+    app.get('/user-count', async (req, res) => {
+      const count = await usersInfoCollection.estimatedDocumentCount();
+      res.send({ count });
     })
 
     // Get user info
