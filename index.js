@@ -89,7 +89,7 @@ async function run() {
       res.send(result)
     })
 
-    // Get user role
+    // Get user info
     app.get('/user/:email', async (req, res) => {
       const email = req.params.email
       const result = await usersInfoCollection.findOne({ email })
@@ -115,29 +115,6 @@ async function run() {
       const result = await usersInfoCollection.updateOne(filter, updateUserInfo, options)
       res.send(result);
     })
-
-
-  //   app.put('/details/:id', async (req, res) => {
-  //     const id = req.params.id;
-  //     const product = req.body;
-  //     console.log(product);
-  //     const filter = { _id: new ObjectId(id) }
-  //     const options = { upsert: true };
-  //     const updateProduct = {
-  //         $set: {
-  //             brandName: product.brandName,
-  //             productName: product.productName,
-  //             type: product.type,
-  //             price: product.price,
-  //             rating: product.rating,
-  //             image: product.image,
-  //             updateProduct: product.updateProduct
-
-  //         }
-  //     }
-  //     const result = await productCollection.updateOne(filter, updateProduct, options)
-  //     res.send(result);
-  // })
 
 
 
