@@ -36,6 +36,18 @@ const verifyToken = async (req, res, next) => {
   })
 }
 
+// use verify admin after verifyToken
+const verifyAdmin = async (req, res, next) => {
+  const email = req.decoded.email;
+  const query = { email: email };
+  const user = await userCollection.findOne(query);
+  const isAdmin = user?.role === 'admin';
+  if (!isAdmin) {
+    return res.status(403).send({ message: 'forbidden access' });
+  }
+  next();
+}
+
 app.post('/logout', async (req, res) => {
   const user = req.body;
   res.clearCookie('token', { maxAge: 0 }).send({ success: true })
@@ -79,9 +91,24 @@ async function run() {
         })
         .send({ success: true })
     })
+    
+
+    // all-users info 
+    app.get('/all-users',verifyToken,async(req,res)=>{
+      const cursor = usersInfoCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+    })
+
+    // Get user info
+    app.get('/user/:email',verifyToken, async (req, res) => {
+      const email = req.params.email
+      const result = await usersInfoCollection.findOne({ email })
+      res.send(result)
+    })
 
 
-    // donors api 
+    // user info post 
     app.post('/user-info', async (req, res) => {
       const userInfo = req.body;
       // console.log(userInfo);
@@ -89,20 +116,14 @@ async function run() {
       res.send(result)
     })
 
-    // Get user info
-    app.get('/user/:email', async (req, res) => {
-      const email = req.params.email
-      const result = await usersInfoCollection.findOne({ email })
-      res.send(result)
-    })
-
+    
     // update user info 
-    app.put('/update-user-info/:email',async (req,res)=>{
+    app.put('/update-user-info/:email',verifyToken, async (req, res) => {
       const email = req.params.email;
       const userInfo = req.body;
-      const filter = {email: email};
-      const options = {upsert: true};
-// console.log(userInfo);
+      const filter = { email: email };
+      const options = { upsert: true };
+      // console.log(userInfo);
       const updateUserInfo = {
         $set: {
           name: userInfo?.name,
