@@ -11,7 +11,7 @@ require('dotenv').config()
 app.use(cors({
   origin: [
     'http://localhost:5173',
-      'http://localhost:5174',
+    'http://localhost:5174',
     //   "https://grand-hotel-daa65.web.app",
     //   "https://grand-hotel-daa65.firebaseapp.com"
   ],
@@ -60,31 +60,31 @@ async function run() {
     const database = client.db("bloodDonation");
     // collections
     const usersInfoCollection = database.collection("usersInfo")
-//auth(token) related api
-app.post('/jwt', async (req, res) => {
-  const user = req.body;
-  const token = jwt.sign(user, process.env.ACESS_TOKEN_SECRET, { expiresIn: '2h' })
-  res
-    .cookie('token', token, {
+    //auth(token) related api
+    app.post('/jwt', async (req, res) => {
+      const user = req.body;
+      const token = jwt.sign(user, process.env.ACESS_TOKEN_SECRET, { expiresIn: '2h' })
+      res
+        .cookie('token', token, {
 
-      // before deploy
-      httpOnly: true,
-      secure: false,
+          // before deploy
+          httpOnly: true,
+          secure: false,
 
 
-      // after deploy
-      // httpOnly: false,
-      // secure: true,
-      // sameSite: 'none'
+          // after deploy
+          // httpOnly: false,
+          // secure: true,
+          // sameSite: 'none'
+        })
+        .send({ success: true })
     })
-    .send({ success: true })
-})
 
 
     // donors api 
     app.post('/user-info', async (req, res) => {
       const userInfo = req.body;
-      console.log(userInfo);
+      // console.log(userInfo);
       const result = await usersInfoCollection.insertOne(userInfo)
       res.send(result)
     })
@@ -96,8 +96,48 @@ app.post('/jwt', async (req, res) => {
       res.send(result)
     })
 
+    // update user info 
+    app.put('/update-user-info/:email',async (req,res)=>{
+      const email = req.params.email;
+      const userInfo = req.body;
+      const filter = {email: email};
+      const options = {upsert: true};
+// console.log(userInfo);
+      const updateUserInfo = {
+        $set: {
+          name: userInfo?.name,
+          imageURL: userInfo?.imageURL,
+          bloodGroup: userInfo?.bloodGroup,
+          district: userInfo?.district,
+          upazila: userInfo?.upazila
+        }
+      }
+      const result = await usersInfoCollection.updateOne(filter, updateUserInfo, options)
+      res.send(result);
+    })
 
 
+  //   app.put('/details/:id', async (req, res) => {
+  //     const id = req.params.id;
+  //     const product = req.body;
+  //     console.log(product);
+  //     const filter = { _id: new ObjectId(id) }
+  //     const options = { upsert: true };
+  //     const updateProduct = {
+  //         $set: {
+  //             brandName: product.brandName,
+  //             productName: product.productName,
+  //             type: product.type,
+  //             price: product.price,
+  //             rating: product.rating,
+  //             image: product.image,
+  //             updateProduct: product.updateProduct
+
+  //         }
+  //     }
+  //     const result = await productCollection.updateOne(filter, updateProduct, options)
+  //     res.send(result);
+  // })
 
 
 
