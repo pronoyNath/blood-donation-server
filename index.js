@@ -91,19 +91,28 @@ async function run() {
         })
         .send({ success: true })
     })
-    
+
 
     // all-users info 
-    app.get('/all-users',verifyToken,async(req,res)=>{
+    app.get('/all-users', verifyToken, async (req, res) => {
       const page = parseInt(req.query.page);
       const size = parseInt(req.query.size);
-
+      const status = req.query.status;
+      // if (status) {
+      //   const result = await usersInfoCollection.find({ status: status })
+      //     .skip(page * size)
+      //     .limit(size)
+      //     .toArray();
+      //   res.send(result);
+      // }
       // console.log('pagination query', page, size);
-      const result = await usersInfoCollection.find()
-      .skip(page * size)
-      .limit(size)
-      .toArray();
+      // else{
+        const result = await usersInfoCollection.find()
+        .skip(page * size)
+        .limit(size)
+        .toArray();
       res.send(result);
+      // }
     })
 
     //total user count
@@ -113,7 +122,7 @@ async function run() {
     })
 
     // Get user info
-    app.get('/user/:email',verifyToken, async (req, res) => {
+    app.get('/user/:email', verifyToken, async (req, res) => {
       const email = req.params.email
       const result = await usersInfoCollection.findOne({ email })
       res.send(result)
@@ -128,9 +137,40 @@ async function run() {
       res.send(result)
     })
 
-    
+    // update user role 
+    app.put('/user-info/:id', async (req, res) => {
+      const userID = req.params.id;
+      const role = req.body;
+      // console.log(userID,role);
+      const filter = { _id: new ObjectId(userID) };
+      const options = { upsert: true };
+      const updateUserRole = {
+        $set: {
+          role: role?.role
+        }
+      }
+      const result = await usersInfoCollection.updateOne(filter, updateUserRole, options)
+      res.send(result);
+    })
+
+     // update user status 
+     app.put('/update-status/:id', async (req, res) => {
+      const userID = req.params.id;
+      const userStatus = req.body;
+      // console.log(userID,userStatus);
+      const filter = { _id: new ObjectId(userID) };
+      const options = { upsert: true };
+      const updateUserRole = {
+        $set: {
+          status: userStatus?.status
+        }
+      }
+      const result = await usersInfoCollection.updateOne(filter, updateUserRole, options)
+      res.send(result);
+    })
+
     // update user info 
-    app.put('/update-user-info/:email',verifyToken, async (req, res) => {
+    app.put('/update-user-info/:email', verifyToken, async (req, res) => {
       const email = req.params.email;
       const userInfo = req.body;
       const filter = { email: email };
