@@ -269,7 +269,7 @@ async function run() {
       res.send(result);
     })
 
-    // update donation request
+    // update donation request info
     app.put('/update-donation-info/:id', async (req, res) => {
       const updatedInfo = req.body;
       const donorID = req.params.id;
@@ -301,6 +301,22 @@ async function run() {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) }
       const result = await donationRequstCollection.deleteOne(query);
+      res.send(result);
+    })
+
+    // donation status updated 
+    app.put('/donation-status/:id', verifyToken, async (req, res) => {
+      const userID = req.params.id;
+      const doantionStatus = req.body;
+      // console.log(userID,doantionStatus?.donationStatus);
+      const filter = { _id: new ObjectId(userID) };
+      const options = { upsert: true };
+      const updateDonationStatus = {
+        $set: {
+          donationStatus: doantionStatus?.donationStatus
+        }
+      }
+      const result = await donationRequstCollection.updateOne(filter, updateDonationStatus, options)
       res.send(result);
     })
 
