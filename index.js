@@ -104,20 +104,26 @@ async function run() {
       const page = parseInt(req.query.page);
       const size = parseInt(req.query.size);
       const status = req.query.status;
+// console.log(status);
+      if (page || size) {
+        const result = await usersInfoCollection.find()
+          .skip(page * size)
+          .limit(size)
+          .toArray();
+        res.send(result);
+      }
+
       // if (status) {
-      //   const result = await usersInfoCollection.find({ status: status })
-      //     .skip(page * size)
-      //     .limit(size)
-      //     .toArray();
+      //   const result = await usersInfoCollection.find({ status: status }).toArray();
       //   res.send(result);
       // }
       // console.log('pagination query', page, size);
       // else{
-      const result = await usersInfoCollection.find()
-        .skip(page * size)
-        .limit(size)
-        .toArray();
-      res.send(result);
+      else {
+        const result = await usersInfoCollection.find()
+          .toArray();
+        res.send(result);
+      }
       // }
     })
 
@@ -125,6 +131,18 @@ async function run() {
     app.get('/user-count', async (req, res) => {
       const count = await usersInfoCollection.estimatedDocumentCount();
       res.send({ count });
+    })
+     //active user count
+     app.get('/active-user-count', async (req, res) => {
+      const status = 'active';
+        const count = await usersInfoCollection.countDocuments({ status });
+        res.send({ count });
+    })
+    //blocked user count
+    app.get('/blocked-user-count', async (req, res) => {
+      const status = 'blocked';
+        const count = await usersInfoCollection.countDocuments({ status });
+        res.send({ count });
     })
 
     // Get user info
@@ -204,12 +222,21 @@ async function run() {
     app.get('/donation-requests', verifyToken, async (req, res) => {
       const page = parseInt(req.query.page);
       const size = parseInt(req.query.size);
-      
+
       const result = await donationRequstCollection.find()
         .skip(page * size)
         .limit(size)
         .toArray();
       res.send(result);
+    })
+
+    //GET SINGLE donation details
+    app.get('/donation-details/:id', async (req, res) => {
+      const id = req.params.id;
+      console.log(id);
+      const query = { _id: new ObjectId(id) };
+      const result = await donationRequstCollection.findOne(query);
+      res.send(result)
     })
 
 
