@@ -104,7 +104,7 @@ async function run() {
       const page = parseInt(req.query.page);
       const size = parseInt(req.query.size);
       const status = req.query.status;
-// console.log(status);
+      // console.log(status);
       if (page || size) {
         const result = await usersInfoCollection.find()
           .skip(page * size)
@@ -132,17 +132,17 @@ async function run() {
       const count = await usersInfoCollection.estimatedDocumentCount();
       res.send({ count });
     })
-     //active user count
-     app.get('/active-user-count', async (req, res) => {
+    //active user count
+    app.get('/active-user-count', async (req, res) => {
       const status = 'active';
-        const count = await usersInfoCollection.countDocuments({ status });
-        res.send({ count });
+      const count = await usersInfoCollection.countDocuments({ status });
+      res.send({ count });
     })
     //blocked user count
     app.get('/blocked-user-count', async (req, res) => {
       const status = 'blocked';
-        const count = await usersInfoCollection.countDocuments({ status });
-        res.send({ count });
+      const count = await usersInfoCollection.countDocuments({ status });
+      res.send({ count });
     })
 
     // Get user info
@@ -253,8 +253,56 @@ async function run() {
       res.send({ count });
     })
 
+    // donation confirm 
+    app.put('/donation-confirm/:id', async (req, res) => {
+      const donationStatus = req.body;
+      const donorID = req.params.id;
 
+      const filter = { _id: new ObjectId(donorID) };
+      const options = { upsert: true };
+      const updateUserRole = {
+        $set: {
+          donationStatus: donationStatus?.donationStatus
+        }
+      }
+      const result = await donationRequstCollection.updateOne(filter, updateUserRole, options)
+      res.send(result);
+    })
 
+    // update donation request
+    app.put('/update-donation-info/:id', async (req, res) => {
+      const updatedInfo = req.body;
+      const donorID = req.params.id;
+      // console.log(updatedInfo);
+      const filter = { _id: new ObjectId(donorID) };
+      const options = { upsert: true };
+      const updateUserRole = {
+        $set: {
+          requesterName: updatedInfo?.requesterName,
+          requesterEmail: updatedInfo?.requesterEmail,
+          recieptName: updatedInfo?.recieptName,
+          address: updatedInfo?.address,
+          hospitalName: updatedInfo?.hospitalName,
+          bloodGroup: updatedInfo?.bloodGroup,
+          time: updatedInfo?.time,
+          date: updatedInfo?.date,
+          district: updatedInfo?.district,
+          upazila: updatedInfo?.upazila,
+          requestMessage: updatedInfo?.requestMessage,
+          donationStatus: 'pending'
+        }
+      }
+      const result = await donationRequstCollection.updateOne(filter, updateUserRole, options)
+      res.send(result);
+    })
+
+    //delete bookedlist
+    app.delete('/donataion-req-delete/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) }
+      const result = await donationRequstCollection.deleteOne(query);
+      res.send(result);
+    })
 
 
 
