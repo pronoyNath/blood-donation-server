@@ -48,6 +48,8 @@ const verifyAdmin = async (req, res, next) => {
   next();
 }
 
+
+
 app.post('/logout', async (req, res) => {
   const user = req.body;
   res.clearCookie('token', { maxAge: 0 }).send({ success: true })
@@ -72,10 +74,14 @@ async function run() {
     const database = client.db("bloodDonation");
     // collections
     const usersInfoCollection = database.collection("usersInfo")
+    const donationRequstCollection = database.collection("donationRequest")
+
+
+
     //auth(token) related api
     app.post('/jwt', async (req, res) => {
       const user = req.body;
-      const token = jwt.sign(user, process.env.ACESS_TOKEN_SECRET, { expiresIn: '2h' })
+      const token = jwt.sign(user, process.env.ACESS_TOKEN_SECRET, { expiresIn: '365d' })
       res
         .cookie('token', token, {
 
@@ -107,7 +113,7 @@ async function run() {
       // }
       // console.log('pagination query', page, size);
       // else{
-        const result = await usersInfoCollection.find()
+      const result = await usersInfoCollection.find()
         .skip(page * size)
         .limit(size)
         .toArray();
@@ -153,8 +159,8 @@ async function run() {
       res.send(result);
     })
 
-     // update user status 
-     app.put('/update-status/:id', async (req, res) => {
+    // update user status 
+    app.put('/update-status/:id', verifyToken, async (req, res) => {
       const userID = req.params.id;
       const userStatus = req.body;
       // console.log(userID,userStatus);
@@ -188,6 +194,38 @@ async function run() {
       const result = await usersInfoCollection.updateOne(filter, updateUserInfo, options)
       res.send(result);
     })
+
+
+
+
+    // donation request related api 
+
+    //get doantion requests
+    app.get('/donation-requests', verifyToken, async (req, res) => {
+      const page = parseInt(req.query.page);
+      const size = parseInt(req.query.size);
+      
+      const result = await donationRequstCollection.find()
+        .skip(page * size)
+        .limit(size)
+        .toArray();
+      res.send(result);
+    })
+
+
+    // post donation request 
+    app.post('/donation-request', verifyToken, async (req, res) => {
+      const userInfo = req.body;
+      // console.log(userInfo);
+      const result = await donationRequstCollection.insertOne(userInfo)
+      res.send(result)
+    })
+    //total donation request count
+    app.get('/donation-requst-count', async (req, res) => {
+      const count = await donationRequstCollection.estimatedDocumentCount();
+      res.send({ count });
+    })
+
 
 
 
