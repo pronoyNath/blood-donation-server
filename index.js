@@ -75,6 +75,7 @@ async function run() {
     // collections
     const usersInfoCollection = database.collection("usersInfo")
     const donationRequstCollection = database.collection("donationRequest")
+    const blogsCollection = database.collection("blogs")
 
 
 
@@ -320,6 +321,22 @@ async function run() {
       res.send(result);
     })
 
+    // blog related api 
+
+      // Get specific user blogs
+      app.get('/blogs/:email', verifyToken, async (req, res) => {
+        const email = req.params.email
+        const result = await blogsCollection.find({ email }).toArray();
+        res.send(result)
+      })
+
+    // blog post post 
+    app.post('/add-blog', async (req, res) => {
+      const blogContent = req.body;
+      // console.log(blogContent);
+      const result = await blogsCollection.insertOne(blogContent)
+      res.send(result)
+    })
 
 
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
