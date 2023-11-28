@@ -139,6 +139,7 @@ async function run() {
       const count = await usersInfoCollection.countDocuments({ status });
       res.send({ count });
     })
+
     //blocked user count
     app.get('/blocked-user-count', async (req, res) => {
       const status = 'blocked';
@@ -219,7 +220,7 @@ async function run() {
 
     // donation request related api 
 
-    //get doantion requests
+    //get doantion requests data by paging
     app.get('/donation-requests', verifyToken, async (req, res) => {
       const page = parseInt(req.query.page);
       const size = parseInt(req.query.size);
@@ -228,6 +229,12 @@ async function run() {
         .skip(page * size)
         .limit(size)
         .toArray();
+      res.send(result);
+    })
+
+    //get doantion requests without paging
+    app.get('/all-donation-requests', verifyToken, async (req, res) => {
+      const result = await donationRequstCollection.find().toArray();
       res.send(result);
     })
 
