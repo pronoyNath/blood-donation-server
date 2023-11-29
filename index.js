@@ -154,18 +154,18 @@ async function run() {
             }
           }
         ]).toArray();
-    
+
         // Extract total price from the result
         const totalPrice = totalPriceResult.length > 0 ? totalPriceResult[0].total : 0;
-    // console.log("total",totalPrice);
+        // console.log("total",totalPrice);
         res.send({ totalPrice });
       } catch (error) {
         console.error(error);
         res.status(500).send({ error: 'Internal Server Error' });
       }
     });
-    
-    
+
+
 
     //active user count
     app.get('/active-user-count', async (req, res) => {
@@ -258,17 +258,44 @@ async function run() {
     app.get('/donation-requests', verifyToken, async (req, res) => {
       const page = parseInt(req.query.page);
       const size = parseInt(req.query.size);
+      const email = req.query.email
+      // console.log("done",email);
 
-      const result = await donationRequstCollection.find()
-        .skip(page * size)
-        .limit(size)
-        .toArray();
-      res.send(result);
+      if (email) {
+        const result = await donationRequstCollection.find({ requesterEmail: email })
+          .skip(page * size)
+          .limit(size)
+          .toArray();
+        res.send(result);
+      }
+      else {
+        const result = await donationRequstCollection.find()
+          .skip(page * size)
+          .limit(size)
+          .toArray();
+        // console.log("rrr",result);
+        res.send(result);
+      }
+
     })
+
+    // donation req data get by email 
+    //  app.get('/donation-requests/:email', async (req, res) => {
+    //   const email = req.params.email;
+
+    //   try {
+    //     const data = await donationRequstCollection.find({ requesterEmail: email }).toArray();
+    //     res.send(data);
+    //   } catch (error) {
+    //     res.status(500).send({ error: 'Internal Server Error' });
+    //   }
+    // });
 
     //get doantion requests without paging
     app.get('/all-donation-requests', verifyToken, async (req, res) => {
-      const result = await donationRequstCollection.find().toArray();
+      const email = req.query.email;
+      // console.log(email);
+      const result = await donationRequstCollection.find({ requesterEmail: email }).toArray();
       res.send(result);
     })
 
@@ -294,6 +321,18 @@ async function run() {
       const count = await donationRequstCollection.estimatedDocumentCount();
       res.send({ count });
     })
+
+    //specific donation request count
+    app.get('/donation-requst-count/:email', async (req, res) => {
+      const email = req.params.email;
+
+      try {
+        const data = await donationRequstCollection.find({ requesterEmail: email }).toArray();
+        res.send(data);
+      } catch (error) {
+        res.status(500).send({ error: 'Internal Server Error' });
+      }
+    });
 
     // donation confirm 
     app.put('/donation-confirm/:id', async (req, res) => {
@@ -364,12 +403,11 @@ async function run() {
 
     // blog related api 
 
-      // Get specific user blogs
-      app.get('/blogs/:email', verifyToken, async (req, res) => {
-        const email = req.params.email
-        const result = await blogsCollection.find({ email }).toArray();
-        res.send(result)
-      })
+    // Get specific user blogs
+    app.get('/blogs', verifyToken, async (req, res) => {
+      const result = await blogsCollection.find().toArray();
+      res.send(result)
+    })
 
     // blog post post 
     app.post('/add-blog', async (req, res) => {
@@ -379,12 +417,54 @@ async function run() {
       res.send(result)
     })
 
+    // blog status (publish) update  
+    app.put('/pulish-blog/:id', async (req, res) => {
+      const blogID = req.params.id;
+      const blogStatus = req.body;
+      // console.log(blogID,blogStatus.blogStatus);
+      const filter = { _id: new ObjectId(blogID) };
+      const options = { upsert: true };
+      const updateBlogStatus = {
+        $set: {
+          blogStatus: blogStatus?.blogStatus
+        }
+      }
+      const result = await blogsCollection.updateOne(filter, updateBlogStatus, options)
+      res.send(result);
+    })
+
+    // blog status (draft) update  
+    app.put('/draft-blog/:id', async (req, res) => {
+      const blogID = req.params.id;
+      const blogStatus = req.body;
+      // console.log(blogID,blogStatus.blogStatus);
+      const filter = { _id: new ObjectId(blogID) };
+      const options = { upsert: true };
+      const updateBlogStatus = {
+        $set: {
+          blogStatus: blogStatus?.blogStatus
+        }
+      }
+      const result = await blogsCollection.updateOne(filter, updateBlogStatus, options)
+      res.send(result);
+    })
+
+    //blog status (delete) update
+    app.delete('/delete-blog/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) }
+      const result = await blogsCollection.deleteOne(query);
+      res.send(result);
+    })
 
 
 
 
 
-// all payment reated api 
+
+
+
+    // all payment reated api 
     // payment intent
     app.post('/create-payment-intent', async (req, res) => {
       const { price } = req.body;
@@ -437,7 +517,7 @@ async function run() {
       //       <div>
       //         <h2>Thank you for your donation</h2>
       //         <h4>Your Transaction Id: <strong>${payment.transactionId}</strong></h4>
-              
+
       //       </div>
       //     `
       //   })
