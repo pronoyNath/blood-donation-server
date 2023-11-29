@@ -33,7 +33,7 @@ const verifyToken = async (req, res, next) => {
       console.log(err)
       res.status(401).send({ message: 'unauthorized' })
     }
-    req.user = decoded;
+    req.decoded = decoded;
     next();
   })
 }
@@ -135,6 +135,38 @@ async function run() {
       const count = await usersInfoCollection.estimatedDocumentCount();
       res.send({ count });
     })
+
+    //total donation requset count
+    app.get('/doantion-req-count', async (req, res) => {
+      const count = await donationRequstCollection.estimatedDocumentCount();
+      res.send({ count });
+    })
+
+    //total fund count
+    app.get('/fund-count', async (req, res) => {
+      try {
+        // Calculate total price
+        const totalPriceResult = await paymentCollection.aggregate([
+          {
+            $group: {
+              _id: null,  // Group by null to aggregate all documents
+              total: { $sum: '$price' }
+            }
+          }
+        ]).toArray();
+    
+        // Extract total price from the result
+        const totalPrice = totalPriceResult.length > 0 ? totalPriceResult[0].total : 0;
+    // console.log("total",totalPrice);
+        res.send({ totalPrice });
+      } catch (error) {
+        console.error(error);
+        res.status(500).send({ error: 'Internal Server Error' });
+      }
+    });
+    
+    
+
     //active user count
     app.get('/active-user-count', async (req, res) => {
       const status = 'active';
@@ -373,9 +405,9 @@ async function run() {
 
     app.get('/payments/:email', verifyToken, async (req, res) => {
       const query = { email: req.params.email }
-      // if (req.params.email !== req.decoded.email) {
-      //   return res.status(403).send({ message: 'forbidden access' });
-      // }
+      if (req.params.email !== req.decoded.email) {
+        return res.status(403).send({ message: 'forbidden access' });
+      }
       const result = await paymentCollection.find(query).toArray();
       res.send(result);
     })
