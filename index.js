@@ -14,6 +14,8 @@ app.use(cors({
   origin: [
     'http://localhost:5173',
     'http://localhost:5174',
+    "https://blood-donate-347ce.web.app",
+    "https://blood-donate-347ce.firebaseapp.com"
     //   "https://grand-hotel-daa65.web.app",
     //   "https://grand-hotel-daa65.firebaseapp.com"
   ],
@@ -141,6 +143,15 @@ async function run() {
       const count = await donationRequstCollection.estimatedDocumentCount();
       res.send({ count });
     })
+
+
+    // // donation pending req data get 
+    app.get('/pending-req', async (req, res) => {
+      const pendingData = await donationRequstCollection.find({ donationStatus: 'pending' }).toArray();
+      // console.log("hittteed");
+      res.send(pendingData);
+    })
+
 
     //total fund count
     app.get('/fund-count', async (req, res) => {
@@ -404,8 +415,9 @@ async function run() {
     // blog related api 
 
     // Get specific user blogs
-    app.get('/blogs', verifyToken, async (req, res) => {
+    app.get('/blogs', async (req, res) => {
       const result = await blogsCollection.find().toArray();
+      // console.log("hitemmmmeee");
       res.send(result)
     })
 
