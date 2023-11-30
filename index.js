@@ -16,8 +16,6 @@ app.use(cors({
     'http://localhost:5174',
     "https://blood-donate-347ce.web.app",
     "https://blood-donate-347ce.firebaseapp.com"
-    //   "https://grand-hotel-daa65.web.app",
-    //   "https://grand-hotel-daa65.firebaseapp.com"
   ],
   credentials: true
 }));
@@ -91,14 +89,14 @@ async function run() {
         .cookie('token', token, {
 
           // before deploy
-          httpOnly: true,
-          secure: false,
+          // httpOnly: true,
+          // secure: false,
 
 
           // after deploy
-          // httpOnly: false,
-          // secure: true,
-          // sameSite: 'none'
+          httpOnly: false,
+          secure: true,
+          sameSite: 'none'
         })
         .send({ success: true })
     })
@@ -145,6 +143,19 @@ async function run() {
     })
 
 
+    // search for doner 
+    app.get('/search-doner/:district/:upazila/:bloodGroup', async (req,res) => {
+      const district = req.params.district;
+      const upazila = req.params.upazila;
+      const bloodGroup = req.params.bloodGroup;
+      const role = 'donor';
+      console.log(district, upazila, bloodGroup);
+      const result = await usersInfoCollection.find({ district,upazila,bloodGroup,role}).toArray();
+      // console.log("hittteed");
+      res.send(result);
+
+    })
+
     // // donation pending req data get 
     app.get('/pending-req', async (req, res) => {
       const pendingData = await donationRequstCollection.find({ donationStatus: 'pending' }).toArray();
@@ -190,6 +201,14 @@ async function run() {
       const status = 'blocked';
       const count = await usersInfoCollection.countDocuments({ status });
       res.send({ count });
+    })
+
+    //blocked user count
+    app.get('/blocked-user/:email', async (req, res) => {
+      const email = req.params.email;
+      const status = 'blocked';
+      const result = await usersInfoCollection.findOne({ email });
+      res.send(result);
     })
 
     // Get user info
